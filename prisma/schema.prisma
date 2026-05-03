@@ -1,0 +1,90 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  ADMIN
+  VISITOR
+}
+
+enum PlaceType {
+  FARMACIA
+  HOSPITAL
+  CLINICA
+  MEDICO
+}
+
+enum StockLevel {
+  ALTO
+  MEDIO
+  BAJO
+  SIN_STOCK
+}
+
+model User {
+  id         String       @id @default(cuid())
+  name       String
+  email      String       @unique
+  password   String
+  role       Role         @default(VISITOR)
+  initials   String
+  createdAt  DateTime     @default(now())
+  visits     Visit[]
+  attendance Attendance[]
+}
+
+model Place {
+  id      String    @id @default(cuid())
+  type    PlaceType
+  name    String
+  address String
+  zone    String
+  doctors Doctor[]
+  visits  Visit[]
+}
+
+model Doctor {
+  id        String  @id @default(cuid())
+  name      String
+  specialty String
+  placeId   String
+  place     Place   @relation(fields: [placeId], references: [id])
+  visits    Visit[]
+}
+
+model Visit {
+  id        String     @id @default(cuid())
+  visitorId String
+  visitor   User       @relation(fields: [visitorId], references: [id])
+  placeId   String
+  place     Place      @relation(fields: [placeId], references: [id])
+  doctorId  String?
+  doctor    Doctor?    @relation(fields: [doctorId], references: [id])
+  objective String
+  finding   String
+  stock     StockLevel
+  photoUrl  String?
+  gpsLat    Float?
+  gpsLng    Float?
+  date      DateTime   @default(now())
+  createdAt DateTime   @default(now())
+}
+
+model Attendance {
+  id           String    @id @default(cuid())
+  visitorId    String
+  visitor      User      @relation(fields: [visitorId], references: [id])
+  checkIn      DateTime
+  checkInAddr  String?
+  checkInLat   Float?
+  checkInLng   Float?
+  checkOut     DateTime?
+  checkOutAddr String?
+  checkOutLat  Float?
+  checkOutLng  Float?
+}
