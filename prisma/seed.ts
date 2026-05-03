@@ -1,9 +1,12 @@
+import { config } from "dotenv";
+config({ path: ".env.local" });
+config();
+
 import { Pool } from "pg";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "../app/generated/prisma/client";
 import { PlaceType, StockLevel, Role } from "../app/generated/prisma/enums";
 import bcrypt from "bcryptjs";
-import "dotenv/config";
 
 const pool = new Pool({ connectionString: process.env.DATABASE_URL! });
 const adapter = new PrismaPg(pool);
@@ -155,4 +158,4 @@ async function main() {
 
 main()
   .catch((e) => { console.error(e); process.exit(1); })
-  .finally(() => prisma.$disconnect());
+  .finally(() => { prisma.$disconnect(); pool.end(); });

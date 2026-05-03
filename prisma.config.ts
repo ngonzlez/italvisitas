@@ -1,4 +1,6 @@
-import "dotenv/config";
+import { config } from "dotenv";
+config({ path: ".env.local" });
+config(); // fallback .env
 import { defineConfig } from "prisma/config";
 
 export default defineConfig({
@@ -7,6 +9,7 @@ export default defineConfig({
     path: "prisma/migrations",
   },
   datasource: {
-    url: process.env["DATABASE_URL"]!,
+    // migrations necesitan conexión directa (puerto 5432), no el pooler
+    url: process.env["DIRECT_URL"] ?? process.env["DATABASE_URL"]!,
   },
 });
