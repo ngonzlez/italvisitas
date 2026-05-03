@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
-import { Plus, Pencil } from "lucide-react";
+import Link from "next/link";
+import { Plus, Pencil, Eye } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import DoctorModal, { type DoctorForModal } from "@/components/admin/DoctorModal";
@@ -48,6 +49,14 @@ export default function DoctorsClient({ doctors, places }: Props) {
                 >
                   {d._count.visits} visitas
                 </span>
+                <Link
+                  href={`/admin/doctors/${d.id}`}
+                  className="p-1.5 rounded-[var(--r-sm)] hover:bg-[var(--ink-100)] transition"
+                  style={{ color: "var(--brand-500)" }}
+                  title="Ver detalle"
+                >
+                  <Eye className="w-3.5 h-3.5" />
+                </Link>
                 <button
                   onClick={() => setModal(d)}
                   className="p-1.5 rounded-[var(--r-sm)] hover:bg-[var(--ink-100)] transition"

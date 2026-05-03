@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
-import { Plus, Pencil } from "lucide-react";
+import Link from "next/link";
+import { Plus, Pencil, Eye } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { PlaceTypeBadge } from "@/components/ui/badge";
@@ -37,6 +38,14 @@ export default function PlacesClient({ places }: Props) {
               <p className="font-semibold text-sm" style={{ color: "var(--ink-900)" }}>{p.name}</p>
               <div className="flex items-center gap-1 shrink-0">
                 <PlaceTypeBadge type={p.type as "FARMACIA" | "HOSPITAL" | "CLINICA" | "MEDICO"} />
+                <Link
+                  href={`/admin/places/${p.id}`}
+                  className="p-1.5 rounded-[var(--r-sm)] hover:bg-[var(--ink-100)] transition"
+                  style={{ color: "var(--brand-500)" }}
+                  title="Ver detalle"
+                >
+                  <Eye className="w-3.5 h-3.5" />
+                </Link>
                 <button
                   onClick={() => setModal(p)}
                   className="p-1.5 rounded-[var(--r-sm)] hover:bg-[var(--ink-100)] transition"
