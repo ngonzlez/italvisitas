@@ -73,7 +73,7 @@ export default function AttendanceToggle({ attendance }: { attendance: Attendanc
               {checkedIn ? "En campo" : attendance?.checkOut ? "Día cerrado" : "Sin registrar"}
             </p>
             {attendance?.checkIn && (
-              <p className="text-xs mt-0.5" style={{ color: "var(--ink-500)" }}>
+              <p className="text-xs mt-0.5" style={{ color: "var(--ink-500)" }} suppressHydrationWarning>
                 Entrada: {formatTime(attendance.checkIn)}
                 {attendance.checkOut && ` · Salida: ${formatTime(attendance.checkOut)}`}
               </p>

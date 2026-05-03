@@ -12,9 +12,5 @@ export default async function NewVisitPage() {
     prisma.doctor.findMany({ include: { place: true }, orderBy: { name: "asc" } }),
   ]);
 
-  return (
-    <div className="px-4 pt-4 pb-4">
-      <NewVisitWizard places={places} doctors={doctors} />
-    </div>
-  );
+  return <NewVisitWizard places={places} doctors={doctors} />;
 }

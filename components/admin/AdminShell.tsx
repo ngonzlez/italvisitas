@@ -3,7 +3,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
   LayoutDashboard, ClipboardList, CheckSquare,
-  Users, Stethoscope, Building2, BarChart2, Menu, X, LogOut
+  Users, Stethoscope, Building2, BarChart2, Settings, Menu, X, LogOut
 } from "lucide-react";
 import type { SessionUser } from "@/lib/auth";
 import { cn } from "@/lib/utils";
@@ -17,6 +17,7 @@ const NAV = [
   { href: "/admin/doctors",      icon: Stethoscope,     label: "Médicos" },
   { href: "/admin/places",       icon: Building2,       label: "Lugares" },
   { href: "/admin/reports",      icon: BarChart2,       label: "Reportes" },
+  { href: "/admin/settings",     icon: Settings,        label: "Configuración" },
 ];
 
 export default function AdminShell({ user, children }: { user: SessionUser; children: React.ReactNode }) {

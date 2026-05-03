@@ -7,12 +7,13 @@ import { Card } from "@/components/ui/card";
 import { StockBadge, PlaceTypeBadge } from "@/components/ui/badge";
 import { formatDate, formatTime, PLACE_TYPE_LABEL } from "@/lib/utils";
 
-export default async function VisitDetailPage({ params }: { params: { id: string } }) {
+export default async function VisitDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const session = await getSession();
   if (!session) redirect("/login");
 
+  const { id } = await params;
   const visit = await prisma.visit.findFirst({
-    where: { id: params.id, visitorId: session.id },
+    where: { id, visitorId: session.id },
     include: { place: true, doctor: true },
   });
   if (!visit) notFound();
