@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { MapPin } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { Card } from "@/components/ui/card";
 import { StockBadge, PlaceTypeBadge } from "@/components/ui/badge";
@@ -82,7 +83,7 @@ export default async function AdminVisitsPage({
                 className="border-b text-xs font-semibold uppercase tracking-wide"
                 style={{ borderColor: "var(--ink-100)", color: "var(--ink-500)" }}
               >
-                {["Fecha", "Visitador", "Lugar", "Tipo", "Médico", "Stock", "Objetivo"].map((h) => (
+                {["Fecha", "Visitador", "Lugar", "Tipo", "Médico", "Stock", "Objetivo / Hallazgo", ""].map((h) => (
                   <th key={h} className="text-left px-4 py-3 whitespace-nowrap">{h}</th>
                 ))}
               </tr>
@@ -116,12 +117,31 @@ export default async function AdminVisitsPage({
                   <td className="px-4 py-3"><PlaceTypeBadge type={v.place.type} /></td>
                   <td className="px-4 py-3 text-xs" style={{ color: "var(--ink-600)" }}>{v.doctor?.name ?? "—"}</td>
                   <td className="px-4 py-3"><StockBadge stock={v.stock} /></td>
-                  <td className="px-4 py-3 max-w-[200px] truncate text-xs" style={{ color: "var(--ink-600)" }}>{v.objective}</td>
+                  <td className="px-4 py-3 max-w-[200px] text-xs" style={{ color: "var(--ink-600)" }}>
+                    <span className="block truncate">{v.objective}</span>
+                    {v.finding && (
+                      <span className="block truncate mt-0.5" style={{ color: "var(--ink-400)" }}>{v.finding}</span>
+                    )}
+                  </td>
+                  <td className="px-4 py-3">
+                    {v.gpsLat && v.gpsLng && (
+                      <Link
+                        href={`https://maps.google.com?q=${v.gpsLat},${v.gpsLng}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        title={`${v.gpsLat.toFixed(4)}, ${v.gpsLng.toFixed(4)}`}
+                        className="flex items-center justify-center w-7 h-7 rounded-[var(--r-sm)] hover:bg-[var(--ink-100)] transition"
+                        style={{ color: "var(--brand-600)" }}
+                      >
+                        <MapPin className="w-4 h-4" />
+                      </Link>
+                    )}
+                  </td>
                 </tr>
               ))}
               {visits.length === 0 && (
                 <tr>
-                  <td colSpan={7} className="px-4 py-8 text-center text-sm" style={{ color: "var(--ink-400)" }}>
+                  <td colSpan={8} className="px-4 py-8 text-center text-sm" style={{ color: "var(--ink-400)" }}>
                     Sin visitas para los filtros seleccionados
                   </td>
                 </tr>
