@@ -111,7 +111,7 @@ export default function NewVisitWizard({
   function selectDoctor(doc: DoctorWithPlaces) {
     if (placeType === "MEDICO") {
       setDoctorId(doc.id);
-      setPlaceId(doc.places.length === 1 ? doc.places[0].id : "");
+      setPlaceId("");
     } else {
       setDoctorId(doctorId === doc.id ? "" : doc.id);
     }
@@ -318,50 +318,49 @@ export default function NewVisitWizard({
                   <Plus className="w-4 h-4" /> Registrar nuevo médico
                 </button>
               </div>
-              {(() => {
-                const doc = doctorId ? doctors.find((d) => d.id === doctorId) : null;
-                if (!doc || doc.places.length <= 1) return null;
-                return (
-                  <div className="mt-3">
-                    <p
-                      className="text-[10px] font-bold uppercase tracking-wider mb-2"
-                      style={{ color: "var(--ink-500)" }}
-                    >
-                      ¿En cuál consultorio?
-                    </p>
-                    <div className="flex flex-col gap-1.5">
-                      {doc.places.map((pl) => {
-                        const active = placeId === pl.id;
-                        return (
-                          <button
-                            key={pl.id}
-                            onClick={() => setPlaceId(pl.id)}
-                            className="flex items-center gap-3 p-3 rounded-[var(--r-xl)] border text-left transition-all"
-                            style={{
-                              borderColor: active ? "var(--brand-600)" : "var(--ink-100)",
-                              background: active ? "var(--brand-50)" : "var(--ink-white)",
-                            }}
+              {doctorId && (
+                <div className="mt-3">
+                  <p
+                    className="text-[10px] font-bold uppercase tracking-wider mb-2"
+                    style={{ color: "var(--ink-500)" }}
+                  >
+                    ¿En cuál consultorio?
+                  </p>
+                  <div className="flex flex-col gap-1.5">
+                    {places.filter((p) => p.type !== "FARMACIA").map((pl) => {
+                      const active = placeId === pl.id;
+                      const TypeIcon = PLACE_TYPE_CONFIG.find((c) => c.key === pl.type)?.Icon;
+                      return (
+                        <button
+                          key={pl.id}
+                          onClick={() => setPlaceId(pl.id)}
+                          className="flex items-center gap-3 p-3 rounded-[var(--r-xl)] border text-left transition-all"
+                          style={{
+                            borderColor: active ? "var(--brand-600)" : "var(--ink-100)",
+                            background: active ? "var(--brand-50)" : "var(--ink-white)",
+                          }}
+                        >
+                          <div
+                            className="w-8 h-8 rounded-[var(--r-md)] flex items-center justify-center shrink-0"
+                            style={{ background: active ? "var(--brand-100)" : "var(--ink-100)", color: active ? "var(--brand-600)" : "var(--ink-500)" }}
                           >
-                            <MapPin
-                              className="w-4 h-4 shrink-0"
-                              style={{ color: active ? "var(--brand-600)" : "var(--ink-400)" }}
-                            />
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm font-semibold truncate" style={{ color: "var(--ink-900)" }}>
-                                {pl.name}
-                              </p>
-                              <p className="text-[11px]" style={{ color: "var(--ink-500)" }}>
-                                {pl.address} · {pl.zone.name}
-                              </p>
-                            </div>
-                            {active && <Check className="w-4 h-4 shrink-0" style={{ color: "var(--brand-600)" }} />}
-                          </button>
-                        );
-                      })}
-                    </div>
+                            {TypeIcon && <TypeIcon className="w-4 h-4" />}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-semibold truncate" style={{ color: "var(--ink-900)" }}>
+                              {pl.name}
+                            </p>
+                            <p className="text-[11px]" style={{ color: "var(--ink-500)" }}>
+                              {pl.address} · {pl.zone.name}
+                            </p>
+                          </div>
+                          {active && <Check className="w-4 h-4 shrink-0" style={{ color: "var(--brand-600)" }} />}
+                        </button>
+                      );
+                    })}
                   </div>
-                );
-              })()}
+                </div>
+              )}
               </>
             ) : (
               /* Place list */
