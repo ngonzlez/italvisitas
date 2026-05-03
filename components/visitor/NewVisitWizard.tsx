@@ -11,9 +11,8 @@ import { Textarea } from "@/components/ui/input";
 import { PLACE_TYPE_LABEL, STOCK_CONFIG, cn } from "@/lib/utils";
 import PlaceModal from "@/components/admin/PlaceModal";
 import DoctorModal from "@/components/admin/DoctorModal";
-import type { Place, Doctor } from "@/app/generated/prisma/client";
-
-type DoctorWithPlace = Doctor & { place: Place };
+type PlaceWithZone = { id: string; type: string; name: string; address: string; zoneId: string; zone: { name: string } };
+type DoctorWithPlaces = { id: string; name: string; specialtyId: string; specialty: { name: string }; places: PlaceWithZone[] };
 type PlaceType = "FARMACIA" | "HOSPITAL" | "CLINICA" | "MEDICO";
 
 const OBJECTIVES = [
@@ -40,9 +39,13 @@ function initials(name: string) {
 export default function NewVisitWizard({
   places,
   doctors,
+  specialties,
+  zones,
 }: {
-  places: Place[];
-  doctors: DoctorWithPlace[];
+  places: PlaceWithZone[];
+  doctors: DoctorWithPlaces[];
+  specialties: { id: string; name: string }[];
+  zones: { id: string; name: string }[];
 }) {
   const router = useRouter();
   const [step, setStep] = useState(1);
@@ -73,7 +76,7 @@ export default function NewVisitWizard({
     return byType.filter(
       (p) =>
         p.name.toLowerCase().includes(q) ||
-        p.zone.toLowerCase().includes(q) ||
+        p.zone.name.toLowerCase().includes(q) ||
         p.address.toLowerCase().includes(q)
     );
   }, [places, placeType, search]);
@@ -81,15 +84,15 @@ export default function NewVisitWizard({
   // Doctors filtered by search (when type=MEDICO all doctors; else doctors at selected place)
   const filteredDoctors = useMemo(() => {
     if (placeType !== "MEDICO") {
-      return placeId ? doctors.filter((d) => d.placeId === placeId) : [];
+      return placeId ? doctors.filter((d) => d.places.some((p) => p.id === placeId)) : [];
     }
     if (!search.trim()) return doctors;
     const q = search.toLowerCase();
     return doctors.filter(
       (d) =>
         d.name.toLowerCase().includes(q) ||
-        d.specialty.toLowerCase().includes(q) ||
-        d.place.name.toLowerCase().includes(q)
+        d.specialty.name.toLowerCase().includes(q) ||
+        d.places.some((p) => p.name.toLowerCase().includes(q))
     );
   }, [doctors, placeType, placeId, search]);
 
@@ -105,17 +108,17 @@ export default function NewVisitWizard({
     setDoctorId("");
   }
 
-  function selectDoctor(doc: DoctorWithPlace) {
+  function selectDoctor(doc: DoctorWithPlaces) {
     if (placeType === "MEDICO") {
       setDoctorId(doc.id);
-      setPlaceId(doc.placeId);
+      setPlaceId(doc.places.length === 1 ? doc.places[0].id : "");
     } else {
       setDoctorId(doctorId === doc.id ? "" : doc.id);
     }
   }
 
   const canContinue =
-    placeType === "MEDICO" ? !!doctorId : !!placeId;
+    placeType === "MEDICO" ? !!doctorId && !!placeId : !!placeId;
 
   async function captureGPS() {
     setGpsLoading(true);
@@ -264,6 +267,7 @@ export default function NewVisitWizard({
 
             {/* Doctor list (type=MEDICO) */}
             {placeType === "MEDICO" ? (
+              <>
               <div className="flex flex-col gap-1.5">
                 {filteredDoctors.map((d) => {
                   const active = doctorId === d.id;
@@ -288,7 +292,7 @@ export default function NewVisitWizard({
                           {d.name}
                         </p>
                         <p className="text-[11px]" style={{ color: "var(--ink-500)" }}>
-                          {d.specialty} · {d.place.name}
+                          {d.specialty.name}{d.places.length > 0 && ` · ${d.places.map(p => p.name).join(", ")}`}
                         </p>
                       </div>
                       {active && <Check className="w-4 h-4 shrink-0" style={{ color: "var(--brand-600)" }} />}
@@ -314,6 +318,51 @@ export default function NewVisitWizard({
                   <Plus className="w-4 h-4" /> Registrar nuevo médico
                 </button>
               </div>
+              {(() => {
+                const doc = doctorId ? doctors.find((d) => d.id === doctorId) : null;
+                if (!doc || doc.places.length <= 1) return null;
+                return (
+                  <div className="mt-3">
+                    <p
+                      className="text-[10px] font-bold uppercase tracking-wider mb-2"
+                      style={{ color: "var(--ink-500)" }}
+                    >
+                      ¿En cuál consultorio?
+                    </p>
+                    <div className="flex flex-col gap-1.5">
+                      {doc.places.map((pl) => {
+                        const active = placeId === pl.id;
+                        return (
+                          <button
+                            key={pl.id}
+                            onClick={() => setPlaceId(pl.id)}
+                            className="flex items-center gap-3 p-3 rounded-[var(--r-xl)] border text-left transition-all"
+                            style={{
+                              borderColor: active ? "var(--brand-600)" : "var(--ink-100)",
+                              background: active ? "var(--brand-50)" : "var(--ink-white)",
+                            }}
+                          >
+                            <MapPin
+                              className="w-4 h-4 shrink-0"
+                              style={{ color: active ? "var(--brand-600)" : "var(--ink-400)" }}
+                            />
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-semibold truncate" style={{ color: "var(--ink-900)" }}>
+                                {pl.name}
+                              </p>
+                              <p className="text-[11px]" style={{ color: "var(--ink-500)" }}>
+                                {pl.address} · {pl.zone.name}
+                              </p>
+                            </div>
+                            {active && <Check className="w-4 h-4 shrink-0" style={{ color: "var(--brand-600)" }} />}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })()}
+              </>
             ) : (
               /* Place list */
               <div className="flex flex-col gap-1.5">
@@ -341,7 +390,7 @@ export default function NewVisitWizard({
                           {p.name}
                         </p>
                         <p className="text-[11px]" style={{ color: "var(--ink-500)" }}>
-                          {p.address} · {p.zone}
+                          {p.address} · {p.zone.name}
                         </p>
                       </div>
                       {active && <Check className="w-4 h-4 shrink-0" style={{ color: "var(--brand-600)" }} />}
@@ -405,7 +454,7 @@ export default function NewVisitWizard({
                             {d.name}
                           </p>
                           <p className="text-[11px]" style={{ color: "var(--ink-500)" }}>
-                            {d.specialty}
+                            {d.specialty.name}
                           </p>
                         </div>
                         {active && <Check className="w-4 h-4 shrink-0" style={{ color: "var(--brand-600)" }} />}
@@ -573,6 +622,7 @@ export default function NewVisitWizard({
       {/* Modals */}
       {showNewPlace && (
         <PlaceModal
+          zones={zones}
           onClose={() => {
             setShowNewPlace(false);
             router.refresh();
@@ -582,6 +632,7 @@ export default function NewVisitWizard({
       {showNewDoctor && (
         <DoctorModal
           places={places}
+          specialties={specialties}
           onClose={() => {
             setShowNewDoctor(false);
             router.refresh();

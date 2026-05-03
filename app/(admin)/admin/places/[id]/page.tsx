@@ -16,12 +16,13 @@ export default async function PlaceDetailPage({
   const place = await prisma.place.findUnique({
     where: { id },
     include: {
+      zone: true,
       visits: {
         include: { visitor: true, doctor: true },
         orderBy: { date: "desc" },
         take: 100,
       },
-      doctors: { select: { id: true, name: true, specialty: true } },
+      doctors: { select: { id: true, name: true, specialty: { select: { name: true } } } },
       _count: { select: { visits: true, doctors: true } },
     },
   });
@@ -49,7 +50,7 @@ export default async function PlaceDetailPage({
             <MapPin className="w-3.5 h-3.5" />
             <span>{place.address}</span>
             <span style={{ color: "var(--ink-300)" }}>·</span>
-            <span>{place.zone}</span>
+            <span>{place.zone.name}</span>
           </div>
         </div>
         <span
@@ -74,7 +75,7 @@ export default async function PlaceDetailPage({
                 style={{ borderColor: "var(--brand-200)", background: "var(--brand-50)", color: "var(--brand-700)" }}
               >
                 {d.name}
-                {d.specialty && <span className="ml-1 opacity-70">· {d.specialty}</span>}
+                {d.specialty && <span className="ml-1 opacity-70">· {d.specialty.name}</span>}
               </div>
             ))}
           </div>

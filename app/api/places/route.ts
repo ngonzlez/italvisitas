@@ -8,12 +8,12 @@ export async function POST(req: NextRequest) {
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
   }
-  const { name, address, zone, type } = await req.json();
-  if (!name || !address || !zone || !type) {
+  const { name, address, zoneId, type } = await req.json();
+  if (!name || !address || !zoneId || !type) {
     return NextResponse.json({ error: "Campos requeridos" }, { status: 400 });
   }
   const place = await prisma.place.create({
-    data: { name, address, zone, type: type as PlaceType },
+    data: { name, address, zoneId, type: type as PlaceType },
   });
   return NextResponse.json(place, { status: 201 });
 }

@@ -7,13 +7,17 @@ export async function POST(req: NextRequest) {
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
   }
-  const { name, specialty, placeId } = await req.json();
-  if (!name || !specialty || !placeId) {
+  const { name, specialtyId, placeIds } = await req.json();
+  if (!name || !specialtyId || !placeIds?.length) {
     return NextResponse.json({ error: "Campos requeridos" }, { status: 400 });
   }
   const doctor = await prisma.doctor.create({
-    data: { name, specialty, placeId },
-    include: { place: true },
+    data: {
+      name,
+      specialtyId,
+      places: { connect: (placeIds as string[]).map((id) => ({ id })) },
+    },
+    include: { specialty: true, places: true },
   });
   return NextResponse.json(doctor, { status: 201 });
 }

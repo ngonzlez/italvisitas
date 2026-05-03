@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Plus, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import UserModal, { type UserForModal } from "@/components/admin/UserModal";
+import RefTableManager from "@/components/admin/RefTableManager";
 import { formatDate } from "@/lib/utils";
 
 type User = UserForModal & { createdAt: string | Date };
@@ -17,11 +18,15 @@ const ROLE_COLORS: Record<string, { bg: string; color: string }> = {
   VISITOR: { bg: "var(--ink-100)",   color: "var(--ink-600)" },
 };
 
+type RefItem = { id: string; name: string };
+
 interface Props {
   users: User[];
+  specialties: RefItem[];
+  zones: RefItem[];
 }
 
-export default function SettingsClient({ users }: Props) {
+export default function SettingsClient({ users, specialties, zones }: Props) {
   const [modal, setModal] = useState<"create" | User | null>(null);
 
   return (
@@ -100,6 +105,11 @@ export default function SettingsClient({ users }: Props) {
           onClose={() => setModal(null)}
         />
       )}
+
+      <div className="mt-8 grid sm:grid-cols-2 gap-6">
+        <RefTableManager title="Especialidades" items={specialties} apiPath="/api/specialties" />
+        <RefTableManager title="Zonas" items={zones} apiPath="/api/zones" />
+      </div>
     </div>
   );
 }

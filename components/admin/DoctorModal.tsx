@@ -7,27 +7,42 @@ import { Input } from "@/components/ui/input";
 import { PLACE_TYPE_LABEL } from "@/lib/utils";
 
 type Place = { id: string; name: string; type: string };
-export type DoctorForModal = { id: string; name: string; specialty: string; placeId: string };
+type Specialty = { id: string; name: string };
+export type DoctorForModal = {
+  id: string;
+  name: string;
+  specialtyId: string;
+  places: { id: string }[];
+};
 
 interface Props {
   doctor?: DoctorForModal;
   places: Place[];
+  specialties: Specialty[];
   onClose: () => void;
 }
 
-export default function DoctorModal({ doctor, places, onClose }: Props) {
+export default function DoctorModal({ doctor, places, specialties, onClose }: Props) {
   const router = useRouter();
   const [name, setName] = useState(doctor?.name ?? "");
-  const [specialty, setSpecialty] = useState(doctor?.specialty ?? "");
-  const [placeId, setPlaceId] = useState(doctor?.placeId ?? "");
+  const [specialtyId, setSpecialtyId] = useState(doctor?.specialtyId ?? "");
+  const [selectedPlaceIds, setSelectedPlaceIds] = useState<string[]>(
+    doctor?.places.map((p) => p.id) ?? []
+  );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [confirmDelete, setConfirmDelete] = useState(false);
 
+  function togglePlace(id: string) {
+    setSelectedPlaceIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+    );
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
-    if (!name.trim() || !specialty.trim() || !placeId) {
+    if (!name.trim() || !specialtyId || !selectedPlaceIds.length) {
       setError("Todos los campos son requeridos");
       return;
     }
@@ -37,7 +52,7 @@ export default function DoctorModal({ doctor, places, onClose }: Props) {
       {
         method: doctor ? "PATCH" : "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: name.trim(), specialty: specialty.trim(), placeId }),
+        body: JSON.stringify({ name: name.trim(), specialtyId, placeIds: selectedPlaceIds }),
       }
     );
     setLoading(false);
@@ -88,28 +103,47 @@ export default function DoctorModal({ doctor, places, onClose }: Props) {
             onChange={(e) => setName(e.target.value)}
             placeholder="Dr. Juan Pérez"
           />
-          <Input
-            label="Especialidad"
-            value={specialty}
-            onChange={(e) => setSpecialty(e.target.value)}
-            placeholder="Cardiología"
-          />
           <div className="flex flex-col gap-1.5">
             <label className="text-xs font-semibold uppercase tracking-wide text-[var(--ink-600)]">
-              Lugar
+              Especialidad
             </label>
             <select
-              value={placeId}
-              onChange={(e) => setPlaceId(e.target.value)}
+              value={specialtyId}
+              onChange={(e) => setSpecialtyId(e.target.value)}
               className="w-full px-3.5 py-2.5 text-sm rounded-[var(--r-md)] border border-[var(--ink-200)] bg-[var(--ink-white)] text-[var(--ink-900)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-500)] focus:border-transparent transition"
             >
-              <option value="">Seleccionar lugar...</option>
-              {places.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.name} — {PLACE_TYPE_LABEL[p.type] ?? p.type}
-                </option>
+              <option value="">Seleccionar especialidad...</option>
+              {specialties.map((s) => (
+                <option key={s.id} value={s.id}>{s.name}</option>
               ))}
             </select>
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <label className="text-xs font-semibold uppercase tracking-wide text-[var(--ink-600)]">
+              Consultorios / Lugares
+            </label>
+            <div
+              className="rounded-[var(--r-md)] border border-[var(--ink-200)] divide-y divide-[var(--ink-100)] max-h-44 overflow-y-auto"
+              style={{ background: "var(--ink-white)" }}
+            >
+              {places.map((p) => (
+                <label
+                  key={p.id}
+                  className="flex items-center gap-2.5 px-3 py-2 cursor-pointer hover:bg-[var(--ink-50)] transition"
+                >
+                  <input
+                    type="checkbox"
+                    checked={selectedPlaceIds.includes(p.id)}
+                    onChange={() => togglePlace(p.id)}
+                    className="accent-[var(--brand-600)] w-3.5 h-3.5"
+                  />
+                  <span className="text-sm" style={{ color: "var(--ink-800)" }}>{p.name}</span>
+                  <span className="text-xs ml-auto" style={{ color: "var(--ink-400)" }}>
+                    {PLACE_TYPE_LABEL[p.type] ?? p.type}
+                  </span>
+                </label>
+              ))}
+            </div>
           </div>
 
           {error && <p className="text-xs text-[var(--danger-600)]">{error}</p>}

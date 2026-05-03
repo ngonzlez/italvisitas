@@ -18,7 +18,7 @@ export default async function VisitorHomePage() {
   const [visits, attendance, todayCount] = await Promise.all([
     prisma.visit.findMany({
       where: { visitorId: session.id },
-      include: { place: true, doctor: true },
+      include: { place: { include: { zone: true } }, doctor: true },
       orderBy: { date: "desc" },
       take: 20,
     }),
@@ -88,7 +88,7 @@ export default async function VisitorHomePage() {
                     {v.place.name}
                   </p>
                   <p className="text-xs mt-0.5 truncate" style={{ color: "var(--ink-500)" }}>
-                    {PLACE_TYPE_LABEL[v.place.type]} · {v.place.zone}
+                    {PLACE_TYPE_LABEL[v.place.type]} · {v.place.zone.name}
                   </p>
                   {v.doctor && (
                     <p className="text-xs mt-0.5 truncate" style={{ color: "var(--ink-500)" }}>

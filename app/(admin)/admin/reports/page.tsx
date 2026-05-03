@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { Card } from "@/components/ui/card";
-import { PLACE_TYPE_LABEL, STOCK_CONFIG } from "@/lib/utils";
+import { STOCK_CONFIG } from "@/lib/utils";
 import ReportsCharts from "@/components/admin/ReportsCharts";
 import ReportsExportButton from "@/components/admin/ReportsExportButton";
 import { PlaceTypeBadge } from "@/components/ui/badge";
@@ -27,16 +27,15 @@ export default async function AdminReportsPage() {
       LIMIT 12
     `,
     prisma.doctor.findMany({
-      select: {
-        name: true,
-        specialty: true,
-        place: { select: { name: true } },
+      include: {
+        specialty: { select: { name: true } },
+        places: { select: { name: true } },
         _count: { select: { visits: true } },
       },
       orderBy: { visits: { _count: "desc" } },
     }),
     prisma.place.findMany({
-      select: { name: true, type: true, zone: true, _count: { select: { visits: true } } },
+      include: { zone: { select: { name: true } }, _count: { select: { visits: true } } },
       orderBy: { visits: { _count: "desc" } },
     }),
     prisma.user.findMany({
@@ -79,14 +78,14 @@ export default async function AdminReportsPage() {
     trendData,
     doctorsList: doctorsList.map(d => ({
       name: d.name,
-      specialty: d.specialty,
-      place: d.place.name,
+      specialty: d.specialty.name,
+      place: d.places[0]?.name ?? "—",
       visitas: d._count.visits,
     })),
     placesList: placesList.map(p => ({
       name: p.name,
       type: p.type,
-      zone: p.zone,
+      zone: p.zone.name,
       visitas: p._count.visits,
     })),
     visitorsList: visitorsList.map(v => ({
@@ -131,8 +130,8 @@ export default async function AdminReportsPage() {
                 {doctorsList.map((d, i) => (
                   <tr key={d.name + i} className="border-b last:border-0" style={{ borderColor: "var(--ink-100)", background: i % 2 === 0 ? "transparent" : "var(--ink-50)" }}>
                     <td className="px-4 py-2.5 font-medium" style={{ color: "var(--ink-900)" }}>{d.name}</td>
-                    <td className="px-4 py-2.5 text-xs" style={{ color: "var(--brand-600)" }}>{d.specialty}</td>
-                    <td className="px-4 py-2.5 text-xs" style={{ color: "var(--ink-600)" }}>{d.place.name}</td>
+                    <td className="px-4 py-2.5 text-xs" style={{ color: "var(--brand-600)" }}>{d.specialty.name}</td>
+                    <td className="px-4 py-2.5 text-xs" style={{ color: "var(--ink-600)" }}>{d.places[0]?.name ?? "—"}</td>
                     <td className="px-4 py-2.5">
                       <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ background: "var(--ink-100)", color: "var(--ink-700)" }}>
                         {d._count.visits}
@@ -167,7 +166,7 @@ export default async function AdminReportsPage() {
                   <tr key={p.name + i} className="border-b last:border-0" style={{ borderColor: "var(--ink-100)", background: i % 2 === 0 ? "transparent" : "var(--ink-50)" }}>
                     <td className="px-4 py-2.5 font-medium" style={{ color: "var(--ink-900)" }}>{p.name}</td>
                     <td className="px-4 py-2.5"><PlaceTypeBadge type={p.type as "FARMACIA" | "HOSPITAL" | "CLINICA" | "MEDICO"} /></td>
-                    <td className="px-4 py-2.5 text-xs" style={{ color: "var(--ink-600)" }}>{p.zone}</td>
+                    <td className="px-4 py-2.5 text-xs" style={{ color: "var(--ink-600)" }}>{p.zone.name}</td>
                     <td className="px-4 py-2.5">
                       <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ background: "var(--ink-100)", color: "var(--ink-700)" }}>
                         {p._count.visits}

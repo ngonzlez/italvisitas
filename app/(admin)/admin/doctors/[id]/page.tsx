@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { Card } from "@/components/ui/card";
 import { PlaceTypeBadge } from "@/components/ui/badge";
-import { formatDate, formatTime, PLACE_TYPE_LABEL } from "@/lib/utils";
+import { formatDate, formatTime } from "@/lib/utils";
 import { MapPin, Stethoscope } from "lucide-react";
 
 export default async function DoctorDetailPage({
@@ -16,9 +16,10 @@ export default async function DoctorDetailPage({
   const doctor = await prisma.doctor.findUnique({
     where: { id },
     include: {
-      place: true,
+      specialty: true,
+      places: true,
       visits: {
-        include: { visitor: true },
+        include: { visitor: true, place: true },
         orderBy: { date: "desc" },
         take: 100,
       },
@@ -50,7 +51,7 @@ export default async function DoctorDetailPage({
             </div>
             <h1 className="text-xl font-bold" style={{ color: "var(--ink-900)" }}>{doctor.name}</h1>
           </div>
-          <p className="text-sm ml-11" style={{ color: "var(--brand-600)" }}>{doctor.specialty}</p>
+          <p className="text-sm ml-11" style={{ color: "var(--brand-600)" }}>{doctor.specialty.name}</p>
         </div>
         <span
           className="text-xs font-bold px-3 py-1.5 rounded-full shrink-0"
@@ -60,20 +61,25 @@ export default async function DoctorDetailPage({
         </span>
       </div>
 
-      {/* Place info */}
-      <Card className="p-4 mb-4">
-        <div className="flex items-center gap-2 text-sm">
-          <MapPin className="w-4 h-4 shrink-0" style={{ color: "var(--ink-400)" }} />
-          <span className="font-medium" style={{ color: "var(--ink-800)" }}>{doctor.place.name}</span>
-          <span style={{ color: "var(--ink-300)" }}>·</span>
-          <PlaceTypeBadge type={doctor.place.type as "FARMACIA" | "HOSPITAL" | "CLINICA" | "MEDICO"} />
-          <span style={{ color: "var(--ink-300)" }}>·</span>
-          <span className="text-xs" style={{ color: "var(--ink-500)" }}>{doctor.place.zone}</span>
-        </div>
-        {doctor.place.address && (
-          <p className="text-xs mt-1.5 ml-6" style={{ color: "var(--ink-400)" }}>{doctor.place.address}</p>
-        )}
-      </Card>
+      {/* Places */}
+      {doctor.places.length > 0 && (
+        <Card className="p-4 mb-4">
+          <p className="text-xs font-semibold mb-2.5" style={{ color: "var(--ink-500)" }}>
+            CONSULTORIOS ({doctor.places.length})
+          </p>
+          <div className="flex flex-col gap-2">
+            {doctor.places.map((pl) => (
+              <div key={pl.id} className="flex items-center gap-2 text-sm">
+                <MapPin className="w-3.5 h-3.5 shrink-0" style={{ color: "var(--ink-400)" }} />
+                <span className="font-medium" style={{ color: "var(--ink-800)" }}>{pl.name}</span>
+                <span style={{ color: "var(--ink-300)" }}>·</span>
+                <PlaceTypeBadge type={pl.type as "FARMACIA" | "HOSPITAL" | "CLINICA" | "MEDICO"} />
+                <span className="text-xs" style={{ color: "var(--ink-400)" }}>{pl.address}</span>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
 
       {/* Visits table */}
       <Card className="overflow-hidden">
@@ -87,7 +93,7 @@ export default async function DoctorDetailPage({
                 className="border-b text-xs font-semibold uppercase tracking-wide"
                 style={{ borderColor: "var(--ink-100)", color: "var(--ink-500)" }}
               >
-                {["Visitador", "Fecha", "Hora"].map(h => (
+                {["Visitador", "Lugar", "Fecha", "Hora"].map(h => (
                   <th key={h} className="text-left px-4 py-3 whitespace-nowrap">{h}</th>
                 ))}
               </tr>
@@ -110,6 +116,9 @@ export default async function DoctorDetailPage({
                       <span style={{ color: "var(--ink-800)" }}>{v.visitor.name}</span>
                     </div>
                   </td>
+                  <td className="px-4 py-3 text-xs" style={{ color: "var(--ink-600)" }}>
+                    {v.place.name}
+                  </td>
                   <td className="px-4 py-3 whitespace-nowrap" style={{ color: "var(--ink-700)" }}>
                     {formatDate(v.date)}
                   </td>
@@ -120,7 +129,7 @@ export default async function DoctorDetailPage({
               ))}
               {doctor.visits.length === 0 && (
                 <tr>
-                  <td colSpan={3} className="px-4 py-8 text-center text-sm" style={{ color: "var(--ink-400)" }}>
+                  <td colSpan={4} className="px-4 py-8 text-center text-sm" style={{ color: "var(--ink-400)" }}>
                     Sin visitas registradas
                   </td>
                 </tr>

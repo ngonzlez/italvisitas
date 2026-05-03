@@ -26,6 +26,18 @@ enum StockLevel {
   SIN_STOCK
 }
 
+model Specialty {
+  id      String   @id @default(cuid())
+  name    String   @unique
+  doctors Doctor[]
+}
+
+model Zone {
+  id     String  @id @default(cuid())
+  name   String  @unique
+  places Place[]
+}
+
 model User {
   id         String       @id @default(cuid())
   name       String
@@ -43,18 +55,19 @@ model Place {
   type    PlaceType
   name    String
   address String
-  zone    String
+  zoneId  String
+  zone    Zone      @relation(fields: [zoneId], references: [id])
   doctors Doctor[]
   visits  Visit[]
 }
 
 model Doctor {
-  id        String  @id @default(cuid())
-  name      String
-  specialty String
-  placeId   String
-  place     Place   @relation(fields: [placeId], references: [id])
-  visits    Visit[]
+  id          String    @id @default(cuid())
+  name        String
+  specialtyId String
+  specialty   Specialty @relation(fields: [specialtyId], references: [id])
+  places      Place[]
+  visits      Visit[]
 }
 
 model Visit {

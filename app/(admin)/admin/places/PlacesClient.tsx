@@ -7,15 +7,19 @@ import { Button } from "@/components/ui/button";
 import { PlaceTypeBadge } from "@/components/ui/badge";
 import PlaceModal, { type PlaceForModal } from "@/components/admin/PlaceModal";
 
-type Place = PlaceForModal & {
+type Zone = { id: string; name: string };
+type Place = Omit<PlaceForModal, "zoneId"> & {
+  zoneId: string;
+  zone: Zone;
   _count: { visits: number; doctors: number };
 };
 
 interface Props {
   places: Place[];
+  zones: Zone[];
 }
 
-export default function PlacesClient({ places }: Props) {
+export default function PlacesClient({ places, zones }: Props) {
   const [modal, setModal] = useState<"create" | Place | null>(null);
 
   return (
@@ -66,7 +70,7 @@ export default function PlacesClient({ places }: Props) {
                 <p className="text-[10px]" style={{ color: "var(--ink-500)" }}>Médicos</p>
               </div>
               <div>
-                <p className="text-base font-bold" style={{ color: "var(--ink-600)" }}>{p.zone}</p>
+                <p className="text-base font-bold" style={{ color: "var(--ink-600)" }}>{p.zone.name}</p>
                 <p className="text-[10px]" style={{ color: "var(--ink-500)" }}>Zona</p>
               </div>
             </div>
@@ -82,6 +86,7 @@ export default function PlacesClient({ places }: Props) {
       {modal !== null && (
         <PlaceModal
           place={modal === "create" ? undefined : modal}
+          zones={zones}
           onClose={() => setModal(null)}
         />
       )}

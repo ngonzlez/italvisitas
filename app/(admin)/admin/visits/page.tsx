@@ -53,7 +53,7 @@ export default async function AdminVisitsPage({
   const [visits, total, visitors] = await Promise.all([
     prisma.visit.findMany({
       where,
-      include: { visitor: true, place: true, doctor: true },
+      include: { visitor: true, place: { include: { zone: true } }, doctor: true },
       orderBy: { date: "desc" },
       skip,
       take: PAGE_SIZE,
@@ -112,7 +112,7 @@ export default async function AdminVisitsPage({
                   </td>
                   <td className="px-4 py-3" style={{ color: "var(--ink-800)" }}>
                     <span className="font-medium">{v.place.name}</span>
-                    <span className="block text-xs" style={{ color: "var(--ink-500)" }}>{v.place.zone}</span>
+                    <span className="block text-xs" style={{ color: "var(--ink-500)" }}>{v.place.zone.name}</span>
                   </td>
                   <td className="px-4 py-3"><PlaceTypeBadge type={v.place.type} /></td>
                   <td className="px-4 py-3 text-xs" style={{ color: "var(--ink-600)" }}>{v.doctor?.name ?? "—"}</td>

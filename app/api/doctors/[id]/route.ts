@@ -8,11 +8,15 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
   }
   const { id } = await params;
-  const { name, specialty, placeId } = await req.json();
+  const { name, specialtyId, placeIds } = await req.json();
   const doctor = await prisma.doctor.update({
     where: { id },
-    data: { name, specialty, placeId },
-    include: { place: true },
+    data: {
+      ...(name && { name }),
+      ...(specialtyId && { specialtyId }),
+      ...(placeIds && { places: { set: (placeIds as string[]).map((pid) => ({ id: pid })) } }),
+    },
+    include: { specialty: true, places: true },
   });
   return NextResponse.json(doctor);
 }

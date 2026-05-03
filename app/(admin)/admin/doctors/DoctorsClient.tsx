@@ -5,20 +5,22 @@ import { Plus, Pencil, Eye } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import DoctorModal, { type DoctorForModal } from "@/components/admin/DoctorModal";
-import { PLACE_TYPE_LABEL } from "@/lib/utils";
 
 type Place = { id: string; name: string; type: string };
-type Doctor = DoctorForModal & {
-  place: Place;
+type Specialty = { id: string; name: string };
+type Doctor = Omit<DoctorForModal, "places"> & {
+  specialty: Specialty;
+  places: Place[];
   _count: { visits: number };
 };
 
 interface Props {
   doctors: Doctor[];
   places: Place[];
+  specialties: Specialty[];
 }
 
-export default function DoctorsClient({ doctors, places }: Props) {
+export default function DoctorsClient({ doctors, places, specialties }: Props) {
   const [modal, setModal] = useState<"create" | Doctor | null>(null);
 
   return (
@@ -40,7 +42,7 @@ export default function DoctorsClient({ doctors, places }: Props) {
             <div className="flex items-start justify-between gap-2 mb-2">
               <div className="min-w-0">
                 <p className="font-semibold text-sm truncate" style={{ color: "var(--ink-900)" }}>{d.name}</p>
-                <p className="text-xs mt-0.5" style={{ color: "var(--brand-600)" }}>{d.specialty}</p>
+                <p className="text-xs mt-0.5" style={{ color: "var(--brand-600)" }}>{d.specialty.name}</p>
               </div>
               <div className="flex items-center gap-1 shrink-0">
                 <span
@@ -66,10 +68,13 @@ export default function DoctorsClient({ doctors, places }: Props) {
                 </button>
               </div>
             </div>
-            <div className="text-xs" style={{ color: "var(--ink-500)" }}>
-              <span>{d.place.name}</span>
-              <span className="mx-1.5">·</span>
-              <span>{PLACE_TYPE_LABEL[d.place.type] ?? d.place.type}</span>
+            <div className="text-xs truncate" style={{ color: "var(--ink-500)" }}>
+              {d.places.map((p, i) => (
+                <span key={p.id}>
+                  {i > 0 && <span className="mx-1" style={{ color: "var(--ink-300)" }}>·</span>}
+                  {p.name}
+                </span>
+              ))}
             </div>
           </Card>
         ))}
@@ -84,6 +89,7 @@ export default function DoctorsClient({ doctors, places }: Props) {
         <DoctorModal
           doctor={modal === "create" ? undefined : modal}
           places={places}
+          specialties={specialties}
           onClose={() => setModal(null)}
         />
       )}

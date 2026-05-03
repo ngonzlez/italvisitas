@@ -14,7 +14,7 @@ export default async function VisitDetailPage({ params }: { params: Promise<{ id
   const { id } = await params;
   const visit = await prisma.visit.findFirst({
     where: { id, visitorId: session.id },
-    include: { place: true, doctor: true },
+    include: { place: { include: { zone: true } }, doctor: { include: { specialty: true } } },
   });
   if (!visit) notFound();
 
@@ -33,7 +33,7 @@ export default async function VisitDetailPage({ params }: { params: Promise<{ id
         <div>
           <h1 className="text-lg font-bold" style={{ color: "var(--ink-900)" }}>{visit.place.name}</h1>
           <p className="text-xs mt-0.5" style={{ color: "var(--ink-500)" }}>
-            {PLACE_TYPE_LABEL[visit.place.type]} · {visit.place.zone}
+            {PLACE_TYPE_LABEL[visit.place.type]} · {visit.place.zone.name}
           </p>
         </div>
         <StockBadge stock={visit.stock} />
@@ -44,7 +44,7 @@ export default async function VisitDetailPage({ params }: { params: Promise<{ id
           {[
             { icon: Calendar, text: `${formatDate(visit.date)} · ${formatTime(visit.date)}` },
             { icon: Building2, text: visit.place.address },
-            ...(visit.doctor ? [{ icon: User, text: `${visit.doctor.name} — ${visit.doctor.specialty}` }] : []),
+            ...(visit.doctor ? [{ icon: User, text: `${visit.doctor.name} — ${visit.doctor.specialty.name}` }] : []),
             ...(visit.gpsLat ? [{ icon: MapPin, text: `${visit.gpsLat.toFixed(4)}, ${visit.gpsLng?.toFixed(4)}` }] : []),
           ].map(({ icon: Icon, text }) => (
             <div key={text} className="flex items-start gap-2">

@@ -18,6 +18,8 @@ async function main() {
   await prisma.doctor.deleteMany();
   await prisma.place.deleteMany();
   await prisma.user.deleteMany();
+  await prisma.specialty.deleteMany();
+  await prisma.zone.deleteMany();
 
   const hashPw = (p: string) => bcrypt.hashSync(p, 10);
 
@@ -28,24 +30,44 @@ async function main() {
     prisma.user.create({ data: { id: "u4", name: "Lucía Ayala",    email: "lucia@italquimica.com.py",  password: hashPw("visita"), role: Role.VISITOR, initials: "LA" } }),
   ]);
 
+  // Reference tables
+  const [spPediatria, spClinica, spGineco, spCardio, spDerma, spTrauma] = await prisma.$transaction([
+    prisma.specialty.create({ data: { id: "sp1", name: "Pediatría" } }),
+    prisma.specialty.create({ data: { id: "sp2", name: "Clínica Médica" } }),
+    prisma.specialty.create({ data: { id: "sp3", name: "Ginecología" } }),
+    prisma.specialty.create({ data: { id: "sp4", name: "Cardiología" } }),
+    prisma.specialty.create({ data: { id: "sp5", name: "Dermatología" } }),
+    prisma.specialty.create({ data: { id: "sp6", name: "Traumatología" } }),
+  ]);
+
+  const [zCentro, zVillaMorra, zSanLorenzo, zRecoleta, zTrinidad, zLambareZ, zLuque] = await prisma.$transaction([
+    prisma.zone.create({ data: { id: "z1", name: "Centro" } }),
+    prisma.zone.create({ data: { id: "z2", name: "Villa Morra" } }),
+    prisma.zone.create({ data: { id: "z3", name: "San Lorenzo" } }),
+    prisma.zone.create({ data: { id: "z4", name: "Recoleta" } }),
+    prisma.zone.create({ data: { id: "z5", name: "Trinidad" } }),
+    prisma.zone.create({ data: { id: "z6", name: "Lambaré" } }),
+    prisma.zone.create({ data: { id: "z7", name: "Luque" } }),
+  ]);
+
   const places = await prisma.$transaction([
-    prisma.place.create({ data: { id: "p1", type: PlaceType.FARMACIA, name: "Farmacia Catedral",         address: "Palma 532, Asunción",            zone: "Centro" } }),
-    prisma.place.create({ data: { id: "p2", type: PlaceType.FARMACIA, name: "Farmacenter Villa Morra",   address: "Mcal. López 3850",               zone: "Villa Morra" } }),
-    prisma.place.create({ data: { id: "p3", type: PlaceType.FARMACIA, name: "Punto Farma San Lorenzo",   address: "Ruta Mcal. Estigarribia 1200",   zone: "San Lorenzo" } }),
-    prisma.place.create({ data: { id: "p4", type: PlaceType.FARMACIA, name: "Farmacia Scavone Recoleta", address: "Av. España 1580",                zone: "Recoleta" } }),
-    prisma.place.create({ data: { id: "p5", type: PlaceType.HOSPITAL, name: "Hospital Bautista",         address: "Av. Argentina 1300",             zone: "Trinidad" } }),
-    prisma.place.create({ data: { id: "p6", type: PlaceType.CLINICA,  name: "Clínica Migone",            address: "Eligio Ayala 1293",              zone: "Centro" } }),
-    prisma.place.create({ data: { id: "p7", type: PlaceType.CLINICA,  name: "Sanatorio La Costa",        address: "Cnel. Cabrera 820",              zone: "Lambaré" } }),
-    prisma.place.create({ data: { id: "p8", type: PlaceType.FARMACIA, name: "Farmacia del Sol Luque",    address: "Gral. Aquino 410",               zone: "Luque" } }),
+    prisma.place.create({ data: { id: "p1", type: PlaceType.FARMACIA, name: "Farmacia Catedral",         address: "Palma 532, Asunción",            zoneId: zCentro.id } }),
+    prisma.place.create({ data: { id: "p2", type: PlaceType.FARMACIA, name: "Farmacenter Villa Morra",   address: "Mcal. López 3850",               zoneId: zVillaMorra.id } }),
+    prisma.place.create({ data: { id: "p3", type: PlaceType.FARMACIA, name: "Punto Farma San Lorenzo",   address: "Ruta Mcal. Estigarribia 1200",   zoneId: zSanLorenzo.id } }),
+    prisma.place.create({ data: { id: "p4", type: PlaceType.FARMACIA, name: "Farmacia Scavone Recoleta", address: "Av. España 1580",                zoneId: zRecoleta.id } }),
+    prisma.place.create({ data: { id: "p5", type: PlaceType.HOSPITAL, name: "Hospital Bautista",         address: "Av. Argentina 1300",             zoneId: zTrinidad.id } }),
+    prisma.place.create({ data: { id: "p6", type: PlaceType.CLINICA,  name: "Clínica Migone",            address: "Eligio Ayala 1293",              zoneId: zCentro.id } }),
+    prisma.place.create({ data: { id: "p7", type: PlaceType.CLINICA,  name: "Sanatorio La Costa",        address: "Cnel. Cabrera 820",              zoneId: zLambareZ.id } }),
+    prisma.place.create({ data: { id: "p8", type: PlaceType.FARMACIA, name: "Farmacia del Sol Luque",    address: "Gral. Aquino 410",               zoneId: zLuque.id } }),
   ]);
 
   await prisma.$transaction([
-    prisma.doctor.create({ data: { id: "d1", name: "Dra. Andrea Núñez",   specialty: "Pediatría",      placeId: "p5" } }),
-    prisma.doctor.create({ data: { id: "d2", name: "Dr. Jorge Villalba",  specialty: "Clínica Médica", placeId: "p6" } }),
-    prisma.doctor.create({ data: { id: "d3", name: "Dra. Mónica Riveros", specialty: "Ginecología",    placeId: "p5" } }),
-    prisma.doctor.create({ data: { id: "d4", name: "Dr. Fernando Ojeda",  specialty: "Cardiología",    placeId: "p7" } }),
-    prisma.doctor.create({ data: { id: "d5", name: "Dra. Silvia Cáceres", specialty: "Dermatología",   placeId: "p6" } }),
-    prisma.doctor.create({ data: { id: "d6", name: "Dr. Luis Figueredo",  specialty: "Traumatología",  placeId: "p5" } }),
+    prisma.doctor.create({ data: { id: "d1", name: "Dra. Andrea Núñez",   specialtyId: spPediatria.id, places: { connect: [{ id: "p5" }] } } }),
+    prisma.doctor.create({ data: { id: "d2", name: "Dr. Jorge Villalba",  specialtyId: spClinica.id,   places: { connect: [{ id: "p6" }] } } }),
+    prisma.doctor.create({ data: { id: "d3", name: "Dra. Mónica Riveros", specialtyId: spGineco.id,    places: { connect: [{ id: "p5" }] } } }),
+    prisma.doctor.create({ data: { id: "d4", name: "Dr. Fernando Ojeda",  specialtyId: spCardio.id,    places: { connect: [{ id: "p7" }] } } }),
+    prisma.doctor.create({ data: { id: "d5", name: "Dra. Silvia Cáceres", specialtyId: spDerma.id,     places: { connect: [{ id: "p6" }, { id: "p5" }] } } }),
+    prisma.doctor.create({ data: { id: "d6", name: "Dr. Luis Figueredo",  specialtyId: spTrauma.id,    places: { connect: [{ id: "p5" }, { id: "p7" }] } } }),
   ]);
 
   const objectives = [
@@ -104,7 +126,7 @@ async function main() {
     });
   }
 
-  const zones = [
+  const attendanceZones = [
     { name: "Centro Asunción",  addr: "Palma 532, Asunción",          lat: -25.2862, lng: -57.647  },
     { name: "Villa Morra",       addr: "Mcal. López 3850, Asunción",   lat: -25.2926, lng: -57.5764 },
     { name: "San Lorenzo",       addr: "Ruta Mcal. Estigarribia 1200", lat: -25.3403, lng: -57.5089 },
@@ -124,7 +146,7 @@ async function main() {
       const inM = Math.floor(Math.random() * 50);
       const checkIn = new Date(day);
       checkIn.setHours(inH, inM, 0);
-      const inZone = zones[(dBack + idx) % zones.length];
+      const inZone = attendanceZones[(dBack + idx) % attendanceZones.length];
 
       const isToday = dBack === 0;
       let checkOut: Date | null = null;
@@ -134,7 +156,7 @@ async function main() {
         const outM = Math.floor(Math.random() * 60);
         checkOut = new Date(day);
         checkOut.setHours(outH, outM, 0);
-        outZone = zones[(dBack + idx + 2) % zones.length];
+        outZone = attendanceZones[(dBack + idx + 2) % attendanceZones.length];
       }
 
       await prisma.attendance.create({

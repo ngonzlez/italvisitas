@@ -6,26 +6,29 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PLACE_TYPE_LABEL } from "@/lib/utils";
 
+type Zone = { id: string; name: string };
+
 export type PlaceForModal = {
   id: string;
   name: string;
   address: string;
-  zone: string;
+  zoneId: string;
   type: string;
 };
 
 interface Props {
   place?: PlaceForModal;
+  zones: Zone[];
   onClose: () => void;
 }
 
 const PLACE_TYPES = ["FARMACIA", "HOSPITAL", "CLINICA", "MEDICO"] as const;
 
-export default function PlaceModal({ place, onClose }: Props) {
+export default function PlaceModal({ place, zones, onClose }: Props) {
   const router = useRouter();
   const [name, setName] = useState(place?.name ?? "");
   const [address, setAddress] = useState(place?.address ?? "");
-  const [zone, setZone] = useState(place?.zone ?? "");
+  const [zoneId, setZoneId] = useState(place?.zoneId ?? "");
   const [type, setType] = useState(place?.type ?? "");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -34,7 +37,7 @@ export default function PlaceModal({ place, onClose }: Props) {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
-    if (!name.trim() || !address.trim() || !zone.trim() || !type) {
+    if (!name.trim() || !address.trim() || !zoneId || !type) {
       setError("Todos los campos son requeridos");
       return;
     }
@@ -44,7 +47,7 @@ export default function PlaceModal({ place, onClose }: Props) {
       {
         method: place ? "PATCH" : "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: name.trim(), address: address.trim(), zone: zone.trim(), type }),
+        body: JSON.stringify({ name: name.trim(), address: address.trim(), zoneId, type }),
       }
     );
     setLoading(false);
@@ -109,12 +112,21 @@ export default function PlaceModal({ place, onClose }: Props) {
             placeholder="Av. Mcal. López 1234"
           />
           <div className="grid grid-cols-2 gap-3">
-            <Input
-              label="Zona"
-              value={zone}
-              onChange={(e) => setZone(e.target.value)}
-              placeholder="Asunción Norte"
-            />
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-semibold uppercase tracking-wide text-[var(--ink-600)]">
+                Zona
+              </label>
+              <select
+                value={zoneId}
+                onChange={(e) => setZoneId(e.target.value)}
+                className="w-full px-3.5 py-2.5 text-sm rounded-[var(--r-md)] border border-[var(--ink-200)] bg-[var(--ink-white)] text-[var(--ink-900)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-500)] focus:border-transparent transition"
+              >
+                <option value="">Seleccionar zona...</option>
+                {zones.map((z) => (
+                  <option key={z.id} value={z.id}>{z.name}</option>
+                ))}
+              </select>
+            </div>
             <div className="flex flex-col gap-1.5">
               <label className="text-xs font-semibold uppercase tracking-wide text-[var(--ink-600)]">
                 Tipo
