@@ -5,6 +5,7 @@ import { Card } from "@/components/ui/card";
 import { StockBadge, PlaceTypeBadge } from "@/components/ui/badge";
 import { formatDate, formatTime } from "@/lib/utils";
 import VisitsFilter from "@/components/admin/VisitsFilter";
+import VisitsExportButton from "@/components/admin/VisitsExportButton";
 
 const PAGE_SIZE = 25;
 
@@ -14,14 +15,15 @@ function firstOfMonth() {
 }
 
 function buildPageUrl(
-  sp: { visitorId?: string; placeType?: string; from?: string; to?: string },
+  sp: { visitorId?: string; placeType?: string; placeId?: string; doctorId?: string; from?: string; to?: string },
   effectiveFrom: string,
   page: number
 ) {
   const params = new URLSearchParams();
   if (sp.visitorId) params.set("visitorId", sp.visitorId);
   if (sp.placeType)  params.set("placeType", sp.placeType);
-  // always set from (even empty string = no date filter)
+  if (sp.placeId)    params.set("placeId", sp.placeId);
+  if (sp.doctorId)   params.set("doctorId", sp.doctorId);
   params.set("from", effectiveFrom);
   if (sp.to) params.set("to", sp.to);
   params.set("page", String(page));
@@ -31,26 +33,28 @@ function buildPageUrl(
 export default async function AdminVisitsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ visitorId?: string; placeType?: string; from?: string; to?: string; page?: string }>;
+  searchParams: Promise<{ visitorId?: string; placeType?: string; placeId?: string; doctorId?: string; from?: string; to?: string; page?: string }>;
 }) {
   const sp = await searchParams;
 
-  // undefined = first load → default to first of month
-  // ""        = user explicitly cleared → no date filter
-  // "YYYY-MM-DD" = specific date
   const effectiveFrom = sp.from === undefined ? firstOfMonth() : sp.from;
   const page = Math.max(1, parseInt(sp.page ?? "1") || 1);
   const skip = (page - 1) * PAGE_SIZE;
 
   const where: Record<string, unknown> = {};
   if (sp.visitorId) where.visitorId = sp.visitorId;
-  if (sp.placeType) where.place = { type: sp.placeType };
+  if (sp.doctorId)  where.doctorId  = sp.doctorId;
+  if (sp.placeId) {
+    where.placeId = sp.placeId;
+  } else if (sp.placeType) {
+    where.place = { type: sp.placeType };
+  }
   const dateFilter: Record<string, Date> = {};
   if (effectiveFrom) dateFilter.gte = new Date(effectiveFrom);
   if (sp.to)         dateFilter.lte = new Date(sp.to + "T23:59:59");
   if (Object.keys(dateFilter).length > 0) where.date = dateFilter;
 
-  const [visits, total, visitors] = await Promise.all([
+  const [visits, total, allForExport, visitors, doctors, places] = await Promise.all([
     prisma.visit.findMany({
       where,
       include: { visitor: true, place: { include: { zone: true } }, doctor: true },
@@ -59,21 +63,51 @@ export default async function AdminVisitsPage({
       take: PAGE_SIZE,
     }),
     prisma.visit.count({ where }),
-    prisma.user.findMany({ where: { role: "VISITOR" }, select: { id: true, name: true } }),
+    prisma.visit.findMany({
+      where,
+      include: { visitor: true, place: { include: { zone: true } }, doctor: true },
+      orderBy: { date: "desc" },
+      take: 2000,
+    }),
+    prisma.user.findMany({ where: { role: "VISITOR" }, select: { id: true, name: true }, orderBy: { name: "asc" } }),
+    prisma.doctor.findMany({ select: { id: true, name: true }, orderBy: { name: "asc" } }),
+    prisma.place.findMany({ select: { id: true, name: true }, orderBy: { name: "asc" } }),
   ]);
 
   const totalPages = Math.ceil(total / PAGE_SIZE);
   const rangeStart = total === 0 ? 0 : skip + 1;
   const rangeEnd = Math.min(skip + PAGE_SIZE, total);
 
+  const exportRows = allForExport.map((v) => ({
+    fecha: formatDate(v.date),
+    hora: formatTime(v.date),
+    visitador: v.visitor.name,
+    lugar: v.place.name,
+    tipo: v.place.type,
+    zona: v.place.zone.name,
+    medico: v.doctor?.name ?? "",
+    stock: v.stock,
+    objetivo: v.objective,
+    hallazgo: v.finding ?? "",
+  }));
+
   return (
     <div>
-      <div className="mb-5">
-        <h1 className="text-xl font-bold" style={{ color: "var(--ink-900)" }}>Visitas</h1>
-        <p className="text-sm mt-0.5" style={{ color: "var(--ink-500)" }}>{total} registros</p>
+      <div className="flex items-center justify-between mb-5">
+        <div>
+          <h1 className="text-xl font-bold" style={{ color: "var(--ink-900)" }}>Visitas</h1>
+          <p className="text-sm mt-0.5" style={{ color: "var(--ink-500)" }}>{total} registros</p>
+        </div>
+        <VisitsExportButton rows={exportRows} />
       </div>
 
-      <VisitsFilter visitors={visitors} defaultFrom={effectiveFrom} defaultTo={sp.to ?? ""} />
+      <VisitsFilter
+        visitors={visitors}
+        doctors={doctors}
+        places={places}
+        defaultFrom={effectiveFrom}
+        defaultTo={sp.to ?? ""}
+      />
 
       <Card className="mt-4 overflow-hidden">
         <div className="overflow-x-auto">
@@ -150,7 +184,6 @@ export default async function AdminVisitsPage({
           </table>
         </div>
 
-        {/* Pagination */}
         {total > 0 && (
           <div
             className="flex items-center justify-between px-4 py-3 border-t"
@@ -170,16 +203,11 @@ export default async function AdminVisitsPage({
                     ← Anterior
                   </Link>
                 ) : (
-                  <span
-                    className="px-3 py-1.5 text-xs font-semibold rounded-[var(--r-sm)] border border-[var(--ink-100)] opacity-40 cursor-not-allowed"
-                    style={{ color: "var(--ink-400)" }}
-                  >
+                  <span className="px-3 py-1.5 text-xs font-semibold rounded-[var(--r-sm)] border border-[var(--ink-100)] opacity-40 cursor-not-allowed" style={{ color: "var(--ink-400)" }}>
                     ← Anterior
                   </span>
                 )}
-                <span className="text-xs px-2" style={{ color: "var(--ink-500)" }}>
-                  {page} / {totalPages}
-                </span>
+                <span className="text-xs px-2" style={{ color: "var(--ink-500)" }}>{page} / {totalPages}</span>
                 {page < totalPages ? (
                   <Link
                     href={buildPageUrl(sp, effectiveFrom, page + 1)}
@@ -189,10 +217,7 @@ export default async function AdminVisitsPage({
                     Siguiente →
                   </Link>
                 ) : (
-                  <span
-                    className="px-3 py-1.5 text-xs font-semibold rounded-[var(--r-sm)] border border-[var(--ink-100)] opacity-40 cursor-not-allowed"
-                    style={{ color: "var(--ink-400)" }}
-                  >
+                  <span className="px-3 py-1.5 text-xs font-semibold rounded-[var(--r-sm)] border border-[var(--ink-100)] opacity-40 cursor-not-allowed" style={{ color: "var(--ink-400)" }}>
                     Siguiente →
                   </span>
                 )}
