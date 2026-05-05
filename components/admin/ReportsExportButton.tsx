@@ -64,7 +64,7 @@ export default function ReportsExportButton({ data }: { data: ExportData }) {
       "Tendencia"
     );
 
-    XLSX.writeFile(wb, `reportes-italvisitas.xlsx`);
+    XLSX.writeFile(wb, `reportes-rondamed.xlsx`);
   }
 
   return (

@@ -35,10 +35,10 @@ export default function AdminShell({ user, children }: { user: SessionUser; chil
       {/* Logo */}
       <div className="flex items-center gap-3 px-5 py-5 border-b" style={{ borderColor: "var(--ink-100)" }}>
         <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background: "var(--brand-800)" }}>
-          <span className="text-white font-extrabold text-sm">iV</span>
+          <span className="text-white font-extrabold text-sm">Rm</span>
         </div>
         <div>
-          <p className="text-sm font-bold leading-tight" style={{ color: "var(--ink-900)" }}>Italvisitas</p>
+          <p className="text-sm font-bold leading-tight" style={{ color: "var(--ink-900)" }}>Rondamed</p>
           <p className="text-[10px]" style={{ color: "var(--ink-500)" }}>Panel administrativo</p>
         </div>
       </div>
@@ -121,9 +121,9 @@ export default function AdminShell({ user, children }: { user: SessionUser; chil
             <Menu className="w-5 h-5" />
           </button>
           <div className="w-6 h-6 rounded-lg flex items-center justify-center" style={{ background: "var(--brand-800)" }}>
-            <span className="text-white font-extrabold text-xs">iV</span>
+            <span className="text-white font-extrabold text-xs">Rm</span>
           </div>
-          <span className="text-sm font-bold" style={{ color: "var(--ink-900)" }}>Italvisitas</span>
+          <span className="text-sm font-bold" style={{ color: "var(--ink-900)" }}>Rondamed</span>
         </div>
 
         <main className="flex-1 p-4 lg:p-6 overflow-y-auto">

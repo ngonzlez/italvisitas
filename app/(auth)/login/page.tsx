@@ -38,9 +38,9 @@ export default function LoginPage() {
             className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4 shadow-[var(--shadow-md)]"
             style={{ background: "var(--brand-800)" }}
           >
-            <span className="text-white font-extrabold text-2xl tracking-tight">iV</span>
+            <span className="text-white font-extrabold text-2xl tracking-tight">Rm</span>
           </div>
-          <h1 className="text-xl font-bold" style={{ color: "var(--ink-900)" }}>Italvisitas</h1>
+          <h1 className="text-xl font-bold" style={{ color: "var(--ink-900)" }}>Rondamed</h1>
           <p className="text-sm mt-1" style={{ color: "var(--ink-500)" }}>Control de visitas médicas</p>
         </div>
 

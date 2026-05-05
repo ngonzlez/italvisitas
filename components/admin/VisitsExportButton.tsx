@@ -38,7 +38,7 @@ export default function VisitsExportButton({ rows }: { rows: VisitExportRow[] })
       ),
       "Visitas"
     );
-    XLSX.writeFile(wb, `visitas-italvisitas.xlsx`);
+    XLSX.writeFile(wb, `visitas-rondamed.xlsx`);
   }
 
   return (

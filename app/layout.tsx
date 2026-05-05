@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Italvisitas — Control de Visitas Médicas",
-  description: "Sistema de control de visitas médicas para Italquimica Paraguay",
+  title: "Rondamed — Control de Visitas Médicas",
+  description: "Sistema de gestión de visitas médicas para laboratorios y empresas del sector salud",
   viewport: "width=device-width, initial-scale=1, maximum-scale=1",
 };
 
